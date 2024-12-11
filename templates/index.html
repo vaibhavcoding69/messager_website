@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Message Board</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+        }
+        #message-form {
+            display: flex;
+            margin-bottom: 20px;
+        }
+        #message-input {
+            flex-grow: 1;
+            padding: 10px;
+            font-size: 16px;
+        }
+        #submit-button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        #messages {
+            border-top: 1px solid #ccc;
+            padding-top: 20px;
+        }
+        .message {
+            background-color: #f1f1f1;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+        }
+        .message .username {
+            font-weight: bold;
+        }
+        .message .timestamp {
+            font-size: 0.8em;
+            color: #666;
+        }
+        #logout {
+            float: right;
+        }
+    </style>
+</head>
+<body>
+    <h1>Message Board</h1>
+    <a href="{{ url_for('logout') }}" id="logout">Logout</a>
+    <form id="message-form" method="POST">
+        <input type="text" id="message-input" name="message" placeholder="Type your message..." required>
+        <button type="submit" id="submit-button">Post</button>
+    </form>
+    <div id="messages">
+        {% for message in messages %}
+            <div class="message">
+                <span class="username">{{ message[4] }}:</span>
+                <p>{{ message[1] }}</p>
+                <span class="timestamp">{{ message[2] }}</span>
+            </div>
+        {% endfor %}
+    </div>
+
+    <script>
+        document.getElementById('message-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const form = e.target;
+            const formData = new FormData(form);
+            
+            fetch('/', {
+                method: 'POST',
+                body: formData
+            }).then(response => {
+                if (response.ok) {
+                    form.reset();
+                    location.reload();
+                }
+            });
+        });
+
+        function loadMessages() {
+            fetch('/api/messages')
+                .then(response => response.json())
+                .then(messages => {
+                    const messagesDiv = document.getElementById('messages');
+                    messagesDiv.innerHTML = '';
+                    messages.forEach(message => {
+                        const messageDiv = document.createElement('div');
+                        messageDiv.className = 'message';
+                        messageDiv.innerHTML = `
+                            <span class="username">${message.username}:</span>
+                            <p>${message.content}</p>
+                            <span class="timestamp">${message.timestamp}</span>
+                        `;
+                        messagesDiv.appendChild(messageDiv);
+                    });
+                });
+        }
+
+        setInterval(loadMessages, 5000); // Refresh messages every 5 seconds
+    </script>
+</body>
+</html>
